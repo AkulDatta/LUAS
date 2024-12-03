@@ -34,8 +34,11 @@ from training_scripts.utils.config_utils import (
     generate_dataset_config,
 )
 from peft import (
-    PeftModel, PeftConfig,
-    get_peft_model, TaskType, prepare_model_for_int8_training
+    PeftModel, 
+    PeftConfig,
+    get_peft_model, 
+    TaskType, 
+    prepare_model_for_kbit_training
 )
 
 import configs
@@ -91,7 +94,7 @@ def main(**kwargs):
     # Load the pre-trained model and setup its configuration
     model = LlamaForCausalLM.from_pretrained(
         model_name,
-        load_in_8bit=True if train_config.quantization else None,
+        load_in_8bit=train_config.quantization,
         device_map="auto" if train_config.quantization else None,
     )
     if train_config.enable_fsdp and train_config.use_fast_kernels:
@@ -109,7 +112,7 @@ def main(**kwargs):
     
     # Prepare the model for int8 training if quantization is enabled
     if train_config.quantization:
-        model = prepare_model_for_int8_training(model)
+        model = prepare_model_for_kbit_training(model)
         
     # Convert the model to bfloat16 if fsdp and pure_bf16 is enabled
     if train_config.enable_fsdp and fsdp_config.pure_bf16:

@@ -5,8 +5,6 @@ from collections import defaultdict
 from generation.multiwoz.db import DataBase as DB
 
 
-
-
 def load_dialog_acts():
     act_file = f'{data_root}/dialog_acts.json'
     data = json.load(open(act_file))

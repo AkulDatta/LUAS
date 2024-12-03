@@ -14,19 +14,20 @@ from torch.distributed.fsdp import (
     # ShardedStateDictConfig, # un-flattened param but shards, usable by other parallel schemes.
 )
 
-from torch.distributed._shard.checkpoint import (
-    FileSystemReader,
+from torch.distributed.checkpoint import (
+    save,
+    load,
     FileSystemWriter,
-    save_state_dict,
-    load_state_dict,
+    FileSystemReader,
 )
+
 from torch.distributed.checkpoint.default_planner import (
     DefaultSavePlanner,
     DefaultLoadPlanner,
 )
 
 from torch.distributed.fsdp.fully_sharded_data_parallel import StateDictType
-import torch.distributed._shard.checkpoint as dist_cp
+import torch.distributed.checkpoint as dist_cp
 import torch.distributed as dist
 
 
@@ -77,7 +78,7 @@ def load_model_checkpoint(model, rank, cfg):
 
     model_checkpoint = torch.load(full_state_dict_model_path)
     # integrate into loaded model
-    model.load_state_dict(model_checkpoint)
+    model.load(model_checkpoint)
 
     print(f"model checkpoint loaded to rank0 cpu")
 

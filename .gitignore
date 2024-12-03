@@ -1,1 +1,9 @@
 ./idea/
+**/__pycache__
+training_scripts/wandb/
+generation/multiwoz/logs/
+
+# MultiWOZ data
+generation/multiwoz/converters/multiwoz/
+generation/multiwoz/converters/woz.2.2.gen/
+generation/multiwoz/converters/woz.2.2.real/
