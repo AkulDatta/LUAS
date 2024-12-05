@@ -112,7 +112,7 @@ class AgentActDataset(Dataset):
 if __name__ == '__main__':
     from transformers import LlamaTokenizer
 
-    tokenizer = LlamaTokenizer.from_pretrained('meta-llama/Llama-2-13b-hf')
+    tokenizer = LlamaTokenizer.from_pretrained('meta-llama/Llama-2-7b-hf')
 
     items = json.load(open('./datas/agent_sft_act_data.json'))
     for item in items:

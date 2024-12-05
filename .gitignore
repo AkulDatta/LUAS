@@ -1,5 +1,5 @@
 ./idea/
-**/__pycache__
+**/__pycache__/
 training_scripts/wandb/
 generation/multiwoz/logs/
 

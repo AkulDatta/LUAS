@@ -14,8 +14,6 @@ validate_gpus() {
     done
 }
 
-HF_TOKEN=""
-
 if [[ -z "${HF_TOKEN:-}" ]]; then
     echo "Error: HF_TOKEN environment variable is not set."
     echo "Please set it using: export HF_TOKEN=your_huggingface_token"

@@ -25,7 +25,7 @@ from torch.utils.data import Dataset
 from datasets import load_dataset
 from pathlib import Path
 
-from ft_datasets.utils import ConcatDataset
+from training_scripts.ft_datasets.utils import ConcatDataset
 
 
 
