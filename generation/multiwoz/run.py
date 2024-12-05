@@ -1,7 +1,7 @@
 import argparse
 import json
 import multiprocessing
-from generation.multiwoz.gen_utils import *
+from gen_utils import *
 
 if __name__ == '__main__':
     args = argparse.ArgumentParser()

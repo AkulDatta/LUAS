@@ -1,43 +1,77 @@
-#!/bin/bash
+validate_gpus() {
+    local gpus=("$@")
+    local max_gpu=$(nvidia-smi --query-gpu=gpu_name --format=csv,noheader | wc -l)
 
-# Hugging Face Token
-HF_TOKEN="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"
-
-# Export the token as an environment variable
-export HUB_TOKEN=$HF_TOKEN
-export HUGGING_FACE_HUB_TOKEN=$HF_TOKEN
-
-NUM_GPUS=1
-
-get_gpu_count() {
-    if command -v nvidia-smi &> /dev/null; then
-        nvidia-smi --query-gpu=gpu_name --format=csv,noheader | wc -l
-    else
-        echo 0
-    fi
+    for gpu in "${gpus[@]}"; do
+        if ! [[ "$gpu" =~ ^[0-9]+$ ]]; then
+            echo "Error: GPU ID must be a number"
+            exit 1
+        fi
+        if [ "$gpu" -ge "$max_gpu" ]; then
+            echo "Error: GPU $gpu does not exist. Maximum GPU ID is $((max_gpu-1))"
+            exit 1
+        fi
+    done
 }
 
-TOTAL_GPUS=$(get_gpu_count)
-USE_GPUS=$NUM_GPUS
+HF_TOKEN=""
 
-if [ $TOTAL_GPUS -eq 0 ]; then
-    echo "Error: No GPUs found in the system"
+if [[ -z "${HF_TOKEN:-}" ]]; then
+    echo "Error: HF_TOKEN environment variable is not set."
+    echo "Please set it using: export HF_TOKEN=your_huggingface_token"
     exit 1
 fi
 
-if [ $NUM_GPUS -gt $TOTAL_GPUS ]; then
-    echo "Warning: Requested $NUM_GPUS GPUs but only $TOTAL_GPUS available. Using $TOTAL_GPUS GPUs."
-    USE_GPUS=$TOTAL_GPUS
-fi
+export HUB_TOKEN=$HF_TOKEN
+export HUGGING_FACE_HUB_TOKEN=$HF_TOKEN
 
-CUDA_DEVICES=""
-for ((i=0; i<$USE_GPUS; i++)); do
-    if [ $i -eq 0 ]; then
-        CUDA_DEVICES="$i"
-    else
-        CUDA_DEVICES="${CUDA_DEVICES},$i"
-    fi
+SELECTED_GPUS=()
+
+while [[ $# -gt 0 ]]; do
+    case $1 in
+        --gpu)
+            shift
+            while [[ $# -gt 0 && ! $1 == --* ]]; do
+                SELECTED_GPUS+=("$1")
+                shift
+            done
+            ;;
+        *)
+            shift
+            ;;
+    esac
 done
+
+if [ ${#SELECTED_GPUS[@]} -eq 0 ]; then
+    NUM_GPUS=1
+    USE_GPUS=$NUM_GPUS
+    
+    TOTAL_GPUS=$(nvidia-smi --query-gpu=gpu_name --format=csv,noheader | wc -l)
+    
+    if [ $TOTAL_GPUS -eq 0 ]; then
+        echo "Error: No GPUs found in the system"
+        exit 1
+    fi
+
+    if [ $NUM_GPUS -gt $TOTAL_GPUS ]; then
+        echo "Warning: Requested $NUM_GPUS GPUs but only $TOTAL_GPUS available. Using $TOTAL_GPUS GPUs."
+        USE_GPUS=$TOTAL_GPUS
+    fi
+
+    CUDA_DEVICES=""
+    for ((i=0; i<$USE_GPUS; i++)); do
+        if [ $i -eq 0 ]; then
+            CUDA_DEVICES="$i"
+        else
+            CUDA_DEVICES="${CUDA_DEVICES},$i"
+        fi
+    done
+else
+    validate_gpus "${SELECTED_GPUS[@]}"
+    CUDA_DEVICES=$(IFS=,; echo "${SELECTED_GPUS[*]}")
+    USE_GPUS=${#SELECTED_GPUS[@]}
+    echo "Using selected GPUs: ${CUDA_DEVICES}"
+fi
 
 DATASET_NAME="agent_sft_act_dataset"
 
@@ -50,8 +84,8 @@ WANDB_PROJECT=""
 
 MODEL_TYPE="7b"
 MODEL_NAME="meta-llama/Llama-2-${MODEL_TYPE}-hf"
-# MODEL_TYPE="8b"
-# MODEL_NAME="meta-llama/Llama-3.1-${MODEL_TYPE}"
+# MODEL_TYPE="8B"
+# MODEL_NAME="meta-llama/Llama-3.1-${MODEL_TYPE}-Instruct"
 
 DATASET_DIR="../generation/multiwoz/converters/woz.2.2.gen"
 
@@ -66,7 +100,7 @@ CUDA_VISIBLE_DEVICES="${CUDA_DEVICES}" torchrun \
     --nnodes 1 \
     --nproc_per_node $USE_GPUS \
     --master_port=1201 \
-    ./llama_finetuning.py \
+    llama_finetuning.py \
     --enable_fsdp \
     --model_name "${MODEL_NAME}" \
     --dataset "${DATASET_NAME}" \
@@ -84,6 +118,7 @@ CUDA_VISIBLE_DEVICES="${CUDA_DEVICES}" torchrun \
     --wandb_name "${TAG}" \
     --wandb_project "${WANDB_PROJECT}"
 
+echo $MODEL_NAME
 python inference/checkpoint_converter_fsdp_hf.py \
     --fsdp_checkpoint_path "./${DATASET_NAME}.${TAG}/epoch_000" \
     --consolidated_model_path "./${DATASET_NAME}.${TAG}/epoch_000.hf" \
@@ -99,7 +134,7 @@ CUDA_VISIBLE_DEVICES="${CUDA_DEVICES}" torchrun \
     --nnodes 1 \
     --nproc_per_node $USE_GPUS \
     --master_port=1201 \
-    ./llama_finetuning.py \
+    llama_finetuning.py \
     --enable_fsdp \
     --model_name "${PRE_TRAIN_MODEL}" \
     --dataset "${DATASET_NAME}" \

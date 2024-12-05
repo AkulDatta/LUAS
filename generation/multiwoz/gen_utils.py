@@ -11,9 +11,9 @@ import tqdm
 from fuzzywuzzy import fuzz
 
 from collections import *
-from generation.multiwoz.gpt_utils import *
-from generation.multiwoz import gen_config as config
-from generation.multiwoz.db import DataBase as MultiWozDB
+from gpt_utils import *
+import gen_config as config
+from db import DataBase as MultiWozDB
 
 
 __dir__ = os.path.split(os.path.realpath(__file__))[0]

@@ -14,7 +14,7 @@ from torch.distributed.fsdp import (
     # ShardedStateDictConfig, # un-flattened param but shards, usable by other parallel schemes.
 )
 
-from torch.distributed._shard.checkpoint import (
+from torch.distributed.checkpoint import (
     FileSystemReader,
     FileSystemWriter,
     save_state_dict,

@@ -7,7 +7,6 @@ import time
 
 import fire
 
-# Unused imports removed
 from training_scripts.utils import fsdp_auto_wrap_policy
 from transformers import (
     LlamaForCausalLM,
@@ -16,7 +15,6 @@ from transformers import (
     BitsAndBytesConfig
 )
 import torch.distributed as dist
-# Unused imports removed
 from training_scripts.utils.train_utils import (
     train,
     freeze_transformer_layers,
@@ -97,6 +95,7 @@ def main(**kwargs):
         load_in_8bit=train_config.quantization,
         device_map="auto" if train_config.quantization else None,
     )
+    
     if train_config.enable_fsdp and train_config.use_fast_kernels:
         """
         For FSDP and FSDP+PEFT, setting 'use_fast_kernels' will enable

@@ -39,7 +39,7 @@ the WOZ2.2 and WOZ2.4 share the same version of generation data except the case 
 
 run 
 ```bash
-python run convert_gen_to_sft.py --woz22 --woz24
+python convert_gen_to_sft.py --woz22 --woz24
 
 # new data will be generated at './woz.2.2.gen' and './woz.2.4.gen'
 ```
